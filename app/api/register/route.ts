@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import * as blob from "@vercel/blob"
+import blob from "@vercel/blob"
 import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
