@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
   try {
+    // Parse incoming request
     const { name, email, password, role } = await request.json()
 
     // Basic validation
@@ -13,13 +14,14 @@ export async function POST(request: Request) {
 
     // Check if user already exists in Vercel Blob Storage
     try {
-      // Try to get the user data
       const existingUser = await get(`users/${email}.json`)
+
+      // If user already exists, return conflict status
       if (existingUser) {
         return NextResponse.json({ error: "User already exists" }, { status: 409 })
       }
-    } catch (error: any) {
-      // If the user doesn't exist (or a 404 error), we continue
+    } catch (error) {
+      // If the error is a 404 (not found), that's okay, it means user doesn't exist yet
       if (error.status !== 404) {
         console.error("Error checking for existing user:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -44,9 +46,13 @@ export async function POST(request: Request) {
       access: 'public',
     })
 
+    // Return success response
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 })
+
   } catch (error) {
     console.error("Registration error:", error)
+
+    // Return internal server error if anything goes wrong
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
