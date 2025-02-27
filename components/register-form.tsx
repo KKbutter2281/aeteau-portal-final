@@ -16,11 +16,15 @@ export function RegisterForm() {
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("student")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null) // State for error message
+  const [success, setSuccess] = useState<string | null>(null) // State for success message
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null) // Reset any previous error
+    setSuccess(null) // Reset any previous success message
 
     try {
       const response = await fetch("/api/register", {
@@ -30,16 +34,19 @@ export function RegisterForm() {
       })
 
       if (response.ok) {
+        const data = await response.json()
+        setSuccess("Registration successful! You can now log in with your new account.")
         toast({
           title: "Registration successful",
-          description: "You can now log in with your new account.",
+          description: data.message,
         })
         router.push("/login")
       } else {
         const data = await response.json()
         throw new Error(data.error || "Registration failed")
       }
-    } catch (error) {
+    } catch (error: any) {
+      setError(error.message) // Set the error message
       toast({
         title: "Registration failed",
         description: error.message,
@@ -79,7 +86,10 @@ export function RegisterForm() {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Registering..." : "Register"}
       </Button>
+
+      {/* Display success or error message */}
+      {success && <div className="mt-4 text-green-600">{success}</div>}
+      {error && <div className="mt-4 text-red-600">{error}</div>}
     </form>
   )
 }
-
