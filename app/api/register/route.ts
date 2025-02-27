@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import blob from "@vercel/blob"
+import { get, put } from "@vercel/blob"
 import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
@@ -11,8 +11,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Check if user already exists using blob.get
-    const userBlob = await blob.get(`users/${email}.json`)
+    // Check if user already exists using get
+    const userBlob = await get(`users/${email}.json`)
     if (userBlob) {
       return NextResponse.json({ error: "User already exists" }, { status: 409 })
     }
@@ -29,8 +29,8 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     }
 
-    // Store user in Vercel Blob Storage using blob.put
-    await blob.put(`users/${email}.json`, JSON.stringify(user), { contentType: "application/json" })
+    // Store user in Vercel Blob Storage using put
+    await put(`users/${email}.json`, JSON.stringify(user), { contentType: "application/json" })
 
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 })
   } catch (error) {
