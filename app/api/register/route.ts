@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { put } from '@vercel/blob'
+import { put, get } from '@vercel/blob'
 import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
@@ -11,17 +11,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Check if user already exists
+    // Check if user already exists in Vercel Blob Storage
     try {
-      const existingUser = await fetch(`https://vercel.blob/users/${email}.json`);
-      if (existingUser.ok) {
-        return NextResponse.json({ error: "User already exists" }, { status: 409 });
+      // Try to get the user data
+      const existingUser = await get(`users/${email}.json`)
+      if (existingUser) {
+        return NextResponse.json({ error: "User already exists" }, { status: 409 })
       }
     } catch (error: any) {
-      // If the error is that the file doesn't exist, that's fine
+      // If the user doesn't exist (or a 404 error), we continue
       if (error.status !== 404) {
-        console.error("Error checking for existing user:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        console.error("Error checking for existing user:", error)
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 })
       }
     }
 
@@ -38,12 +39,12 @@ export async function POST(request: Request) {
     }
 
     // Store user in Vercel Blob Storage
-    const { url } = await put(`users/${email}.json`, JSON.stringify(user), {
+    await put(`users/${email}.json`, JSON.stringify(user), {
       contentType: "application/json",
       access: 'public',
-    });
+    })
 
-    return NextResponse.json({ message: "User registered successfully", url }, { status: 201 })
+    return NextResponse.json({ message: "User registered successfully" }, { status: 201 })
   } catch (error) {
     console.error("Registration error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
