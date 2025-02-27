@@ -12,16 +12,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Check if user already exists in Vercel Blob Storage
+    // Try to get the user from Vercel Blob Storage
+    let existingUser;
     try {
-      const existingUser = await get(`users/${email}.json`);
-
-      // If user exists, return conflict status
+      // You may need to check for a `get` function or change to another correct API call
+      existingUser = await get(`users/${email}.json`);
       if (existingUser) {
         return NextResponse.json({ error: "User already exists" }, { status: 409 });
       }
     } catch (error) {
-      // If the error is a 404 (not found), it means user doesn't exist yet
+      // Handle if the user doesn't exist (probably 404 or other error codes)
       if (error.status !== 404) {
         console.error("Error checking for existing user:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
