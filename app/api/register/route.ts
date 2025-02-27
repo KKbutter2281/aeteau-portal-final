@@ -12,23 +12,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Check if the user exists by listing the files
-    let userExists = false;
-    try {
-      // List all users in the "users" folder
-      const usersList = await list("users/");
-
-      // Check if a file with the user's email exists in the list
-      userExists = usersList.some((file) => file.name === `${email}.json`);
-      if (userExists) {
-        return NextResponse.json({ error: "User already exists" }, { status: 409 });
-      }
-    } catch (error) {
-      // Handle potential errors from listing
-      console.error("Error checking for existing user:", error);
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-    }
-
     // Hash password
     let hashedPassword;
     try {
