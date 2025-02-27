@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { get, put } from "@vercel/blob"
+import { BlobServiceClient } from '@vercel/blob'
 import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
@@ -11,15 +11,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Check if user already exists using get
+    // Initialize Blob Service Client
+    const blob = new BlobServiceClient();
+
+    // Check if user already exists
     try {
-      const { body } = await get(`users/${email}.json`);
-      if (body) {
+      const existingUser = await blob.get(`users/${email}.json`);
+      if (existingUser) {
         return NextResponse.json({ error: "User already exists" }, { status: 409 });
       }
     } catch (error: any) {
       // If the error is that the file doesn't exist, that's fine
-      if (error.message !== 'File not found') {
+      if (error.status !== 404) {
         console.error("Error checking for existing user:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
       }
@@ -37,8 +40,11 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     }
 
-    // Store user in Vercel Blob Storage using put
-    await put(`users/${email}.json`, JSON.stringify(user), { contentType: "application/json" })
+    // Store user in Vercel Blob Storage
+    await blob.put(`users/${email}.json`, JSON.stringify(user), {
+      contentType: "application/json",
+      access: 'public',
+    })
 
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 })
   } catch (error) {
