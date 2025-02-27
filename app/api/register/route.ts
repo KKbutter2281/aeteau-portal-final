@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { put, get } from "@vercel/blob";
+import { put, list } from "@vercel/blob"; // Assuming `list` is available
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
@@ -12,20 +12,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Try to get the user from Vercel Blob Storage
-    let existingUser;
+    // Check if the user exists by listing the files
+    let userExists = false;
     try {
-      // You may need to check for a `get` function or change to another correct API call
-      existingUser = await get(`users/${email}.json`);
-      if (existingUser) {
+      // List all users in the "users" folder
+      const usersList = await list("users/");
+
+      // Check if a file with the user's email exists in the list
+      userExists = usersList.some((file) => file.name === `${email}.json`);
+      if (userExists) {
         return NextResponse.json({ error: "User already exists" }, { status: 409 });
       }
     } catch (error) {
-      // Handle if the user doesn't exist (probably 404 or other error codes)
-      if (error.status !== 404) {
-        console.error("Error checking for existing user:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-      }
+      // Handle potential errors from listing
+      console.error("Error checking for existing user:", error);
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 
     // Hash password
