@@ -1,39 +1,43 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { User } from "@clerk/nextjs/server"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export function AdminDashboard({ user }) {
-  const [applicationCount, setApplicationCount] = useState(0)
+interface AdminDashboardProps {
+  user: User
+}
 
-  useEffect(() => {
-    // TODO: Fetch application count from Vercel Blob Storage
-    // For now, we'll use a placeholder count
-    setApplicationCount(10)
-  }, [])
-
+export function AdminDashboard({ user }: AdminDashboardProps) {
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Welcome, Admin {user.name}</CardTitle>
+          <CardTitle>Applications Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Email: {user.email}</p>
-          <p>Pending Applications: {applicationCount}</p>
+          <Button asChild>
+            <Link href="/admin/applications">View Applications</Link>
+          </Button>
         </CardContent>
       </Card>
-      <div className="flex space-x-4">
-        <Button asChild>
-          <Link href="/admin/applications">Review Applications</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/admin/financial-aid">Manage Financial Aid</Link>
-        </Button>
-      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Button asChild>
+              <Link href="/admin/users">Manage Users</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/admin/settings">Settings</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-

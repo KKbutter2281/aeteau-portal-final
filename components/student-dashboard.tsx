@@ -1,83 +1,61 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { User } from "@clerk/nextjs/server"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export function StudentDashboard({ user }) {
-  const [applicationStatus, setApplicationStatus] = useState(null)
-  const [financialAid, setFinancialAid] = useState(null)
-
-  useEffect(() => {
-    fetchApplicationStatus()
-    fetchFinancialAid()
-  }, [])
-
-  const fetchApplicationStatus = async () => {
-    try {
-      const response = await fetch("/api/application-status")
-      if (response.ok) {
-        const data = await response.json()
-        setApplicationStatus(data.status)
-      } else {
-        console.error("Failed to fetch application status")
-      }
-    } catch (error) {
-      console.error("Error fetching application status:", error)
+interface StudentDashboardProps {
+  user: User
+  applicationStatus: string
+  userData: {
+    personalInfo?: {
+      fullName?: string
+      highSchool?: string
+      graduationYear?: string
     }
   }
+}
 
-  const fetchFinancialAid = async () => {
-    try {
-      const response = await fetch("/api/financial-aid")
-      if (response.ok) {
-        const data = await response.json()
-        setFinancialAid(data)
-      } else {
-        console.error("Failed to fetch financial aid information")
-      }
-    } catch (error) {
-      console.error("Error fetching financial aid information:", error)
-    }
-  }
-
+export function StudentDashboard({ user, applicationStatus, userData }: StudentDashboardProps) {
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Welcome, {user.name}</CardTitle>
+          <CardTitle>Profile Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Email: {user.email}</p>
-          <p>Application Status: {applicationStatus || "Not Started"}</p>
+          <dl className="space-y-2">
+            <dt className="font-semibold">Name</dt>
+            <dd>{userData.personalInfo?.fullName || "Not provided"}</dd>
+            <dt className="font-semibold">High School</dt>
+            <dd>{userData.personalInfo?.highSchool || "Not provided"}</dd>
+            <dt className="font-semibold">Email</dt>
+            <dd>{user.emailAddresses[0].emailAddress}</dd>
+          </dl>
+          <Button asChild className="mt-4">
+            <Link href="/profile">Edit Profile</Link>
+          </Button>
         </CardContent>
       </Card>
 
-      {financialAid && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Financial Aid Offer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Scholarship Amount: ${financialAid.scholarshipAmount}</p>
-            <p>Grant Amount: ${financialAid.grantAmount}</p>
-            <p>Total Aid: ${financialAid.scholarshipAmount + financialAid.grantAmount}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex space-x-4">
-        {applicationStatus === "Not Started" && (
-          <Button asChild>
-            <Link href="/application">Start Application</Link>
-          </Button>
-        )}
-        <Button asChild variant="outline">
-          <Link href="/documents">Upload Documents</Link>
-        </Button>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Application Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-lg font-medium">
+              Status: {applicationStatus || "Not Started"}
+            </p>
+            <Button asChild>
+              <Link href="/application">
+                {applicationStatus ? "View Application" : "Start Application"}
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-
